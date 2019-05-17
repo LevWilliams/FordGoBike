@@ -1,0 +1,229 @@
+---
+title: "Lev Williams' FordGoBikeMidterm"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+In this notebook I download and unzip the [Ford Go Bike](https://www.fordgobike.com/) [data](https://www.fordgobike.com/system-data). 
+
+```{r}
+getwd()
+library(tictoc)
+library(ggmap)
+library(skimr)
+library(forcats)
+library(tidyverse)
+```
+
+Set working directory.
+
+```{r}
+setwd("C:/Users/LardR/Desktop/650Midterm")
+getwd()
+```
+
+Create a directory data in your directory, as a subdirectory, within your working directory.  Of use a Project and delete the previous code chunk.  Download the files into the data directory.  First one is not zipped, the remaining are zipped.
+
+```{r}
+URL <- "https://s3.amazonaws.com/fordgobike-data/2017-fordgobike-tripdata.csv"
+download.file(URL, destfile = "./data/2017-fordgobike-tripdata.csv", method="curl")
+URL <- "https://s3.amazonaws.com/fordgobike-data/201801-fordgobike-tripdata.csv.zip"
+download.file(URL, destfile = "./data/201801-fordgobike-tripdata.csv.zip", method="curl")
+URL <- "https://s3.amazonaws.com/fordgobike-data/201802-fordgobike-tripdata.csv.zip"
+download.file(URL, destfile = "./data/201802-fordgobike-tripdata.csv.zip", method="curl")
+URL <- "https://s3.amazonaws.com/fordgobike-data/201803-fordgobike-tripdata.csv.zip"
+download.file(URL, destfile = "./data/201803-fordgobike-tripdata.csv.zip", method="curl")
+URL <- "https://s3.amazonaws.com/fordgobike-data/201804-fordgobike-tripdata.csv.zip"
+download.file(URL, destfile = "./data/201804-fordgobike-tripdata.csv.zip", method="curl")
+URL <- "https://s3.amazonaws.com/fordgobike-data/201805-fordgobike-tripdata.csv.zip"
+download.file(URL, destfile = "./data/201805-fordgobike-tripdata.csv.zip", method="curl")
+URL <- "https://s3.amazonaws.com/fordgobike-data/201806-fordgobike-tripdata.csv.zip"
+download.file(URL, destfile = "./data/201806-fordgobike-tripdata.csv.zip", method="curl")
+URL <- "https://s3.amazonaws.com/fordgobike-data/201807-fordgobike-tripdata.csv.zip"
+download.file(URL, destfile = "./data/201807-fordgobike-tripdata.csv.zip", method="curl")
+URL <- "https://s3.amazonaws.com/fordgobike-data/201808-fordgobike-tripdata.csv.zip"
+download.file(URL, destfile = "./data/201808-fordgobike-tripdata.csv.zip", method="curl")
+```
+
+Loop over the one value in the url and filename that changes.
+
+```{r, eval=TRUE}
+
+URL <- "https://s3.amazonaws.com/fordgobike-data/2017-fordgobike-tripdata.csv"
+download.file(URL, destfile = "./data/2017-fordgobike-tripdata.csv", method="curl")
+
+for (i in 1:8) {
+URL <- paste0("https://s3.amazonaws.com/fordgobike-data/20180",i,"-fordgobike-tripdata.csv.zip")
+download.file(URL, destfile = paste0("./data/20180",i,"-fordgobike-tripdata.csv.zip"), method="curl")
+}
+```
+
+
+
+Unzip downloaded files.
+
+```{r}
+unzip("./data/201801-fordgobike-tripdata.csv.zip",exdir="./data")
+unzip("./data/201802-fordgobike-tripdata.csv.zip",exdir="./data")
+unzip("./data/201803-fordgobike-tripdata.csv.zip",exdir="./data")
+unzip("./data/201804-fordgobike-tripdata.csv.zip",exdir="./data")
+unzip("./data/201805-fordgobike-tripdata.csv.zip",exdir="./data")
+unzip("./data/201806-fordgobike-tripdata.csv.zip",exdir="./data")
+unzip("./data/201807-fordgobike-tripdata.csv.zip",exdir="./data")
+```
+
+Clean up data directory.
+
+```{r}
+fn <- "./data/201801-fordgobike-tripdata.csv.zip"
+if (file.exists(fn)) file.remove(fn)
+fn <- "./data/201802-fordgobike-tripdata.csv.zip"
+if (file.exists(fn)) file.remove(fn)
+fn <- "./data/201803-fordgobike-tripdata.csv.zip"
+if (file.exists(fn)) file.remove(fn)
+fn <- "./data/201804-fordgobike-tripdata.csv.zip"
+if (file.exists(fn)) file.remove(fn)
+fn <- "./data/201805-fordgobike-tripdata.csv.zip"
+if (file.exists(fn)) file.remove(fn)
+fn <- "./data/201806-fordgobike-tripdata.csv.zip"
+if (file.exists(fn)) file.remove(fn)
+fn <- "./data/201807-fordgobike-tripdata.csv.zip"
+if (file.exists(fn)) file.remove(fn)
+fn <- "./data/201808-fordgobike-tripdata.csv.zip"
+if (file.exists(fn)) file.remove(fn)
+```
+
+Read the.csv files
+
+```{r}
+fordgobike2017 <- read_csv(file="./data/2017-fordgobike-tripdata.csv")
+fordgobike201801 <- read_csv(file="./data/201801-fordgobike-tripdata.csv")
+fordgobike201802 <- read_csv(file="./data/201802-fordgobike-tripdata.csv")
+fordgobike201803 <- read_csv(file="./data/201803-fordgobike-tripdata.csv")
+fordgobike201804 <- read_csv(file="./data/201804-fordgobike-tripdata.csv")
+fordgobike201805 <- read_csv(file="./data/201805-fordgobike-tripdata.csv")
+fordgobike201806 <- read_csv(file="./data/201806-fordgobike-tripdata.csv")
+fordgobike201807 <- read_csv(file="./data/201807-fordgobike-tripdata.csv")
+fordgobike201808 <- read_csv(file="./data/201807-fordgobike-tripdata.csv")
+fordgobike201801 <- fordgobike201801 %>%
+        mutate(start_station_id = as.integer(start_station_id),
+               end_station_id= as.integer(end_station_id) ) 
+
+fordgobike201802 <- fordgobike201802 %>%
+        mutate(start_station_id = as.integer(start_station_id),
+               end_station_id= as.integer(end_station_id) ) 
+
+fordgobike201803 <- fordgobike201803 %>%
+        mutate(start_station_id = as.integer(start_station_id),
+               end_station_id= as.integer(end_station_id) ) 
+
+fordgobike201804 <- fordgobike201804 %>%
+        mutate(start_station_id = as.integer(start_station_id),
+               end_station_id= as.integer(end_station_id) ) 
+
+fordgobike201805 <- fordgobike201805 %>%
+        mutate(start_station_id = as.integer(start_station_id),
+               end_station_id= as.integer(end_station_id) ) 
+
+fordgobike201806 <- fordgobike201806 %>%
+        mutate(start_station_id = as.integer(start_station_id),
+               end_station_id= as.integer(end_station_id) )   
+
+fordgobike201807 <- fordgobike201807 %>%
+        mutate(start_station_id = as.integer(start_station_id),
+               end_station_id= as.integer(end_station_id) )
+
+fordgobike201808 <- fordgobike201808 %>%
+        mutate(start_station_id = as.integer(start_station_id),
+               end_station_id= as.integer(end_station_id) ) 
+fordgobike2018 <- bind_rows(fordgobike201801, fordgobike201802, fordgobike201803, fordgobike201804,fordgobike201805, fordgobike201806, fordgobike201807, fordgobike201808)
+fordgobike <- bind_rows(fordgobike2017, fordgobike2018)
+```
+1.) Explain what the GBFS is?
+
+\textcolor{red}{1.) GBFS is the General Bike Feed Share which is a real time data collection stream.}
+
+2.) Explain any difficulties you encountered getting the code to work.
+
+\textcolor{red}{2.) The variable in the individual month dataframes for 2018 had some of their startstationid as a character rather than a integer and I had to change the data type of the variable accordingly.}
+
+```{r}
+dim(fordgobike2017)[1]
+```
+\textcolor{red}{3.) In 2017 there have been 519700}
+
+```{r}
+dim(fordgobike2018)[1]
+```
+
+\textcolor{red}{In 2018 there have been 1217608}
+
+```{r}
+dim(fordgobike)[1]
+```
+\textcolor{red}{In 2017 there have been 1737308}
+
+
+4.) There is a part of the code that uses the as.integer() function for some reason. Explain what this function is being used for in the code.
+
+\textcolor{red}{4.) The code containing as.integer is above the questions and it servers the purpose of transforming the startstationid and endstationid variables into integer variables from character variables}
+
+5.)How is the Age variable created? Are there any outliers in the data? How many outliers have you removed? State what you think is a good cut off is to remove any outliers.
+
+```{r}
+fordgobike <- fordgobike %>% mutate(age = 2018 - member_birth_year)
+hist(fordgobike$age)
+above90 <- fordgobike$age>90
+oldgobike <- fordgobike %>% filter(age > 90)
+hist(oldgobike$age)
+oldgobike %>%   count()
+newgobike <- fordgobike %>% filter(age <= 90)
+newgobike %>% count()
+```
+\textcolor{red}{5.) The age variable is created by subtracting the members year of birth by the current year which is 2018. The data points that have an age higher than 90 seem to be implasable so I will consider them outliers. With this cutoff point, we will be filtering out 1,473 rows.}
+
+6.) In 2018, what month had the highest number of riders? What month had the lowest number of riders? Interpret any seasonal patterns.
+```{r}
+library(lubridate)
+newgobike <- newgobike %>% mutate(year=year(start_time), month=month(start_time), day=day(start_time) )
+newgobike %>% select(month) %>% group_by(month) %>% summarise(n=n()) %>%na.omit() %>% arrange(desc(n)) 
+```
+\textcolor{red}{6.) July is the month with the most rides and the month with the lowest amount of rides is August. A trend that is visible is that the amount of rides start increasing in Feburary until they reach their nadir in July. This could be because the weather gets progressively more temperate until after July where it starts to become uncomfortably warm in August.}
+
+7.) What start station had the highest number of rides? That is, which start station was used most to start rides?
+
+```{r}
+newgobike %>% select(start_station_id) %>% group_by(start_station_id) %>% summarise(n=n()) %>% arrange(desc(n)) %>% na.omit()
+```
+\textcolor{red}{7.) Station 30 has the highest number of rides at 34804}
+
+8.) What was the Age of the youngest rider? What was the Age of the oldest rider, after removing the outliers? What was the mean Age of the rider? What was the mean Age of the Female riders? What was the mean Age of the Male riders?
+
+```{r}
+newgobike %>% select(age) %>% na.omit() %>% min()
+
+newgobike %>% select(age) %>% na.omit() %>% max()
+
+newgobike %>% select(age) %>% na.omit() %>% summarize(mean=mean(age))
+
+newgobike %>% select(age,member_gender) %>% na.omit() %>%
+group_by(member_gender) %>% summarize(mean=mean(age))
+```
+\textcolor{red}{8.) The minimum age of riders was 18. The maximum age of riders was 90 given the cutoff. The mean age of all riders is 35.86832. The mean age of female riders is 34.48666. The mean age of male riders is 36.31817}
+
+9.) Using the Amelia package and the missmap() function determine the rate of missing data in the month of June.
+
+```{r}
+library(Amelia)
+newgobike %>% filter(month == 6) %>% missmap()
+```
+\textcolor{red}{9.) There are a few missing datapoints within variables in the dataframe however there are so few that the missmap function says that theres 0 percent missing data.}
+
+
+10.) What Type of rider uses the Ford goBikes more? Subscribers or Customers?
+```{r}
+newgobike %>% select(user_type) %>% group_by(user_type) %>% summarise(n=n())
+```
+\textcolor{red}{10.) Subscribers use Ford goBikes more often than Customers.}
+
